@@ -1,0 +1,545 @@
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset1 Segoe UI Symbol;}{\f2\fnil Calibri;}{\f3\fnil\fcharset1 Cambria Math;}{\f4\fnil\fcharset0 Cambria Math;}{\f5\fnil Cambria Math;}{\f6\fnil\fcharset1 Segoe UI Emoji;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.19041}{\*\mmathPr\mmathFont3\mwrapIndent1440 }\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\qc\f0\fs22\lang9 TERJEMAHAN DJANGO HAL 21-35\par
+
+\pard\sa200\sl276\slmult1\b HAL 21\par
+
+\pard\sa200\sl276\slmult1\qj\b0 **2.4 Menulis Aplikasi Django Pertamamu, Bagian 2**\par
+Tutorial ini dimulai dari akhir *Tutorial 1*. Kita akan menyiapkan basis data (*database*), membuat model pertamamu, dan mendapatkan pengenalan singkat tentang situs admin yang dibuat otomatis oleh Django.\par
+### \f1\u-10179?\u-9055?\f2  \f0 Tempat Mendapatkan Bantuan\par
+Jika kamu mengalami kesulitan dalam mengikuti tutorial ini, silakan buka bagian **Getting Help** di **FAQ** (Pertanyaan yang Sering Diajukan).\par
+### 2.4.1 Pengaturan Basis Data (*Database Setup*)\par
+Sekarang, buka file **mysite/settings.py**.\par
+File ini adalah modul Python biasa yang berisi variabel-variabel tingkat modul yang mewakili *settings* (pengaturan) Django.\par
+Secara bawaan, konfigurasi **DATABASES** menggunakan **SQLite**.\par
+Jika kamu baru mengenal basis data, atau hanya ingin mencoba Django, ini adalah pilihan paling mudah.\par
+SQLite sudah termasuk dalam Python, jadi kamu tidak perlu menginstal apa pun untuk mendukung basis datamu.\par
+Namun, ketika kamu mulai membuat proyek yang lebih serius, kamu mungkin ingin menggunakan basis data yang lebih *scalable* (dapat dikembangkan), seperti **PostgreSQL**, agar terhindar dari kerepotan saat harus mengganti basis data di kemudian hari.\par
+Jika kamu ingin menggunakan basis data lain, lihat detail cara menyesuaikan pengaturan dan menjalankan basis datamu.\par
+\b HAL 22\par
+\b0 **Django Documentation, Versi 5.2.8.dev20251031124732**\par
+Saat kamu sedang mengedit file **mysite/settings.py**, ubah nilai **TIME_ZONE** sesuai dengan zona waktu kamu.\par
+Selain itu, perhatikan juga pengaturan **INSTALLED_APPS** di bagian atas file tersebut.\par
+Bagian ini berisi daftar nama semua aplikasi Django yang diaktifkan dalam *instance* Django kamu.\par
+Satu aplikasi dapat digunakan di beberapa proyek, dan kamu juga bisa mengemas serta mendistribusikannya agar orang lain dapat menggunakannya dalam proyek mereka.\par
+### \f1\u-10179?\u-8921?\f2  \f0 Secara bawaan, `INSTALLED_APPS` berisi aplikasi-aplikasi berikut, yang semuanya disertakan dalam Django:\par
+\par
+* **django.contrib.admin** \f2\endash  Situs admin. Kamu akan segera menggunakannya.\par
+* **django.contrib.auth** \endash  Sistem autentikasi.\par
+* **django.contrib.contenttypes** \endash  Kerangka kerja untuk tipe konten.\par
+* **django.contrib.sessions** \endash  Kerangka kerja untuk sesi pengguna.\par
+* **django.contrib.messages** \endash  Kerangka kerja untuk pesan.\par
+* **django.contrib.staticfiles** \endash  Kerangka kerja untuk mengelola berkas statis.\par
+\par
+Aplikasi-aplikasi ini disertakan secara otomatis untuk memudahkan penggunaan pada kasus umum.\par
+Namun, beberapa di antaranya membutuhkan setidaknya satu tabel di basis data, jadi kita perlu membuat tabel-tabel tersebut sebelum dapat menggunakannya.\par
+Untuk melakukannya, jalankan perintah berikut di terminal:\par
+$ python manage.py migrate\par
+Perintah **migrate** akan melihat pengaturan pada **INSTALLED_APPS** dan membuat tabel-tabel basis data yang diperlukan, sesuai dengan konfigurasi database di file **mysite/settings.py**, serta migrasi database yang sudah disertakan oleh aplikasi tersebut (bagian ini akan dijelaskan nanti).\par
+Kamu akan melihat pesan untuk setiap migrasi yang dijalankan.\par
+Jika kamu penasaran, kamu bisa membuka *command-line client* basis datamu dan menjalankan perintah berikut untuk menampilkan tabel yang dibuat Django:\par
+* PostgreSQL \f3\u8594?\f2  \f0 `\\dt`\par
+* MariaDB/MySQL \f3\u8594?\f2  \f0 `SHOW TABLES;`\par
+* SQLite \f3\u8594?\f2  \f0 `.tables`\par
+* Oracle \f3\u8594?\f2  \f0 `SELECT TABLE_NAME FROM USER_TABLES;`\par
+### \f1\u-10179?\u-9055?\f2  \f0 Untuk Pengguna Minimalis\par
+Seperti disebutkan sebelumnya, aplikasi-aplikasi bawaan disertakan untuk kebutuhan umum, tetapi tidak semua orang memerlukannya.\par
+Jika kamu tidak membutuhkan sebagian atau seluruh aplikasi tersebut, kamu bebas untuk memberi komentar atau menghapus baris yang sesuai dari **INSTALLED_APPS** sebelum menjalankan **migrate**.\par
+Perintah **migrate** hanya akan menjalankan migrasi untuk aplikasi yang tercantum di dalam **INSTALLED_APPS**.\par
+## 2.4.2 Membuat Model (*Creating Models*)\par
+Sekarang kita akan mendefinisikan *model* \f2\emdash  pada dasarnya adalah rancangan atau struktur basis data kamu, dengan tambahan *metadata*.\par
+### \f1\u-10179?\u-9043?\f2  \f0 Filsafat Django\par
+Sebuah **model** adalah sumber tunggal dan pasti dari informasi tentang datamu.\par
+Model berisi *field-field* penting dan perilaku dari data yang kamu simpan.\par
+Django mengikuti **Prinsip DRY (Don\f2\rquote\f0 t Repeat Yourself)**, yaitu prinsip untuk menghindari pengulangan kode.\par
+Tujuannya adalah untuk mendefinisikan struktur data kamu **hanya satu kali**, di satu tempat, dan Django akan menangani sisanya secara otomatis.\par
+\b HAL 23\par
+**Django\f4  \f0 Documentation\f4 , \f0 Versi\f4  \f0 5\f4 .\f0 2\f4 .\f0 8\f4 .\f0 dev20251031124732**\par
+Dengan\f4  \f0 mendefinisikan\f4  \f0 *model*\f4  \f0 di\f4  \f0 satu\f4  \f0 tempat\f4 , \f0 Django\f4  \f0 dapat\f4  \f0 secara\f4  \f0 otomatis\f4  \f0 menurunkan\f4  \f0 berbagai\f4  \f0 hal\f4  \f0 dari\f4  \f0 model\f4  \f0 tersebut\f4 .\f0\par
+Ini\f4  \f0 termasuk\f4  \f0 **migrasi**\f4  \f3\emdash\f5  \f0 berbeda\f4  \f0 dengan\f4  \f0 *Ruby\f4  \f0 on\f4  \f0 Rails*\f4 , \f0 misalnya\f4 , \f0 di\f4  \f0 Django\f4  \f0 migrasi\f4  \f0 sepenuhnya\f4  \f0 **dibuat\f4  \f0 berdasarkan\f4  \f0 file\f4  \f0 model\f4 -\f0 mu**\f4 , \f0 dan\f4  \f0 pada\f4  \f0 dasarnya\f4  \f0 merupakan\f4  \f0 **riwayat\f4  \f0 perubahan**\f4  \f0 yang\f4  \f0 digunakan\f4  \f0 Django\f4  \f0 untuk\f4  \f0 memperbarui\f4  \f0 *schema*\f4  \f0 basis\f4  \f0 data\f4  \f0 agar\f4  \f0 sesuai\f4  \f0 dengan\f4  \f0 model\f4  \f0 yang\f4  \f0 sedang\f4  \f0 digunakan\f4 .\f0\par
+Dalam\f4  \f0 aplikasi\f4  \f0 *poll*\f4  (\f0 jajak\f4  \f0 pendapat\f4 ) \f0 kita\f4 , \f0 kita\f4  \f0 akan\f4  \f0 membuat\f4  \f0 dua\f4  \f0 model\f4 :\f0\par
+\par
+*\f4  \f0 **Question**\f4  (\f0 *pertanyaan*\f4 ), \f0 yang\f4  \f0 memiliki\f4  \f0 teks\f4  \f0 pertanyaan\f4  \f0 dan\f4  \f0 tanggal\f4  \f0 publikasi\f4 .\f0\par
+*\f4  \f0 **Choice**\f4  (\f0 *pilihan*\f4 ), \f0 yang\f4  \f0 memiliki\f4  \f0 dua\f4  \f0 *field*\f4 : \f0 teks\f4  \f0 pilihan\f4  \f0 dan\f4  \f0 jumlah\f4  \f0 suara\f4 .\f0\par
+\f4   \f0 Setiap\f4  \f0 **Choice**\f4  \f0 terhubung\f4  \f0 dengan\f4  \f0 satu\f4  \f0 **Question**\f4 .\f0\par
+\par
+Konsep\f4 -\f0 konsep\f4  \f0 ini\f4  \f0 direpresentasikan\f4  \f0 sebagai\f4  \f0 **kelas\f4  \f0 Python**\f4 .\f0\par
+Edit\f4  \f0 file\f4  \f0 **polls\f4 /\f0 models\f4 .\f0 py**\f4  \f0 agar\f4  \f0 terlihat\f4  \f0 seperti\f4  \f0 berikut\f4 :\f0\par
+\f4 ### \f1\u-10179?\u-9020?\f5  \f0 Listing\f4  \f0 11\f4 : \f0 polls\f4 /\f0 models\f4 .\f0 py\par
+\par
+```python\par
+from\f4  \f0 django\f4 .\f0 db\f4  \f0 import\f4  \f0 models\par
+\par
+class\f4  \f0 Question\f4 (\f0 models\f4 .\f0 Model\f4 ):\f0\par
+\f4     \f0 question\f4 _\f0 text\f4  = \f0 models\f4 .\f0 CharField\f4 (\f0 max\f4 _\f0 length\f4 =\f0 200\f4 )\f0\par
+\f4     \f0 pub\f4 _\f0 date\f4  = \f0 models\f4 .\f0 DateTimeField\f4 (\f0 "date\f4  \f0 published"\f4 )\f0\par
+\par
+class\f4  \f0 Choice\f4 (\f0 models\f4 .\f0 Model\f4 ):\f0\par
+\f4     \f0 question\f4  = \f0 models\f4 .\f0 ForeignKey\f4 (\f0 Question\f4 , \f0 on\f4 _\f0 delete\f4 =\f0 models\f4 .\f0 CASCADE\f4 )\f0\par
+\f4     \f0 choice\f4 _\f0 text\f4  = \f0 models\f4 .\f0 CharField\f4 (\f0 max\f4 _\f0 length\f4 =\f0 200\f4 )\f0\par
+\f4     \f0 votes\f4  = \f0 models\f4 .\f0 IntegerField\f4 (\f0 default\f4 =\f0 0\f4 )\f0\par
+\par
+Di\f4  \f0 sini\f4 , \f0 setiap\f4  \f0 **model**\f4  \f0 direpresentasikan\f4  \f0 oleh\f4  \f0 sebuah\f4  \f0 kelas\f4  \f0 yang\f4  \f0 merupakan\f4  \f0 **subclass**\f4  \f0 dari\f4  \f0 `django\f4 .\f0 db\f4 .\f0 models\f4 .\f0 Model`\f4 .\f0\par
+Setiap\f4  \f0 model\f4  \f0 memiliki\f4  \f0 beberapa\f4  \f0 **variabel\f4  \f0 kelas**\f4 , \f0 dan\f4  \f0 masing\f4 -\f0 masing\f4  \f0 variabel\f4  \f0 ini\f4  \f0 mewakili\f4  \f0 satu\f4  \f0 *field*\f4  (\f0 kolom\f4 ) \f0 di\f4  \f0 dalam\f4  \f0 tabel\f4  \f0 basis\f4  \f0 data\f4  \f0 model\f4  \f0 tersebut\f4 .\f0\par
+\f4 ### \f6\u-10178?\u-8727?\f5  \f0 Penjelasan\f4 :\f0\par
+\par
+*\f4  \f0 Setiap\f4  \f0 *field*\f4  \f0 direpresentasikan\f4  \f0 oleh\f4  \f0 **instance\f4  \f0 dari\f4  \f0 kelas\f4  \f0 Field**\f4 , \f0 misalnya\f4 :\f0\par
+\par
+\f4   \f0 *\f4  \f0 `CharField`\f4  \f0 untuk\f4  \f0 teks\f4  \f0 atau\f4  \f0 karakter\f4 .\f0\par
+\f4   \f0 *\f4  \f0 `DateTimeField`\f4  \f0 untuk\f4  \f0 tanggal\f4  \f0 dan\f4  \f0 waktu\f4 .\f0\par
+\f4     \f0 Ini\f4  \f0 memberi\f4  \f0 tahu\f4  \f0 Django\f4  \f0 jenis\f4  \f0 data\f4  \f0 apa\f4  \f0 yang\f4  \f0 disimpan\f4  \f0 di\f4  \f0 setiap\f4  \f0 *field*\f4 .\f0\par
+\par
+*\f4  \f0 Nama\f4  \f0 dari\f4  \f0 setiap\f4  \f0 *Field\f4  \f0 instance*\f4  (\f0 misalnya\f4  \f0 `question\f4 _\f0 text`\f4  \f0 atau\f4  \f0 `pub\f4 _\f0 date`\f4 ) \f0 adalah\f4  \f0 **nama\f4  \f0 field**\f4  \f0 dalam\f4  \f0 format\f4  \f0 yang\f4  \f0 mudah\f4  \f0 dibaca\f4  \f0 oleh\f4  \f0 mesin\f4 .\f0\par
+\f4   \f0 Nama\f4  \f0 ini\f4  \f0 akan\f4  \f0 digunakan\f4  \f0 dalam\f4  \f0 kode\f4  \f0 Python\f4  \f0 kamu\f4 , \f0 dan\f4  \f0 juga\f4  \f0 akan\f4  \f0 menjadi\f4  \f0 nama\f4  \f0 kolom\f4  \f0 di\f4  \f0 basis\f4  \f0 data\f4 .\f0\par
+*\f4  \f0 Kamu\f4  \f0 dapat\f4  \f0 memberikan\f4  \f0 **argumen\f4  \f0 pertama\f4  \f0 opsional**\f4  \f0 pada\f4  \f0 sebuah\f4  \f0 *Field*\f4  \f0 untuk\f4  \f0 menentukan\f4  \f0 **nama\f4  \f0 yang\f4  \f0 mudah\f4  \f0 dibaca\f4  \f0 manusia**\f4  (\f0 *human\f4 -\f0 readable\f4  \f0 name*\f4 ).\f0\par
+\f4   \f0 Nama\f4  \f0 ini\f4  \f0 digunakan\f4  \f0 oleh\f4  \f0 Django\f4  \f0 di\f4  \f0 beberapa\f4  \f0 bagian\f4  \f0 internal\f4  \f0 dan\f4  \f0 juga\f4  \f0 berfungsi\f4  \f0 sebagai\f4  \f0 dokumentasi\f4 .\f0\par
+\f4   \f0 Jika\f4  \f0 kamu\f4  \f0 tidak\f4  \f0 menyediakannya\f4 , \f0 Django\f4  \f0 akan\f4  \f0 otomatis\f4  \f0 menggunakan\f4  \f0 nama\f4  \f0 yang\f4  \f0 mudah\f4  \f0 dibaca\f4  \f0 mesin\f4 .\f0\par
+\f4   \f0 Dalam\f4  \f0 contoh\f4  \f0 di\f4  \f0 atas\f4 , \f0 hanya\f4  \f0 *field*\f4  \f0 `Question\f4 .\f0 pub\f4 _\f0 date`\f4  \f0 yang\f4  \f0 memiliki\f4  \f0 nama\f4  \f0 yang\f4  \f0 mudah\f4  \f0 dibaca\f4  (\f2\ldblquote\f0 date\f4  \f0 published\f2\rdblquote\f4 ).\f0\par
+\f4   \f0 Semua\f4  \f0 *field*\f4  \f0 lainnya\f4  \f0 menggunakan\f4  \f0 nama\f4  \f0 mesin\f4  \f0 sebagai\f4  \f0 nama\f4  \f0 tampilannya\f4 .\f0\par
+\f4 ### \f6\u9881?\u-497?\f5  \f0 Argumen\f4  \f0 pada\f4  \f0 Field\f4 :\f0\par
+*\f4  \f0 Beberapa\f4  \f0 kelas\f4  \f0 *Field*\f4  \f0 memiliki\f4  \f0 **argumen\f4  \f0 wajib**\f4 .\f0\par
+\f4   \f0 Contohnya\f4 , \f0 `CharField`\f4  \f0 **harus\f4  \f0 memiliki**\f4  \f0 `max\f4 _\f0 length`\f4 , \f0 yang\f4  \f0 digunakan\f4  \f0 baik\f4  \f0 dalam\f4  \f0 *schema*\f4  \f0 basis\f4  \f0 data\f4  \f0 maupun\f4  \f0 untuk\f4  \f0 **validasi**\f4  \f0 data\f4 .\f0\par
+*\f4  \f0 Selain\f4  \f0 itu\f4 , \f0 *Field*\f4  \f0 juga\f4  \f0 dapat\f4  \f0 memiliki\f4  \f0 **argumen\f4  \f0 opsional**\f4 .\f0\par
+\f4   \f0 Dalam\f4  \f0 contoh\f4  \f0 ini\f4 , \f0 `votes`\f4  \f0 memiliki\f4  \f0 nilai\f4  \f0 default\f4  \f0 **0**\f4 , \f0 artinya\f4  \f0 jika\f4  \f0 tidak\f4  \f0 diisi\f4 , \f0 maka\f4  \f0 nilainya\f4  \f0 otomatis\f4  \f0 akan\f4  \f0 diatur\f4  \f0 menjadi\f4  \f0 nol\f4 .\par
+HAL 24\par
+\b0 **Django Documentation, Versi 5.2.8.dev20251031124732**\par
+Akhirnya, perhatikan bahwa sebuah **relasi** didefinisikan menggunakan **ForeignKey**.\par
+Hal ini memberi tahu Django bahwa **setiap Choice (pilihan)** terhubung dengan **satu Question (pertanyaan)**.\par
+Django mendukung semua jenis relasi basis data umum:\par
+\par
+* *many-to-one* (banyak ke satu),\par
+* *many-to-many* (banyak ke banyak), dan\par
+* *one-to-one* (satu ke satu).\par
+\par
+---\par
+\par
+## 2.4.3 Mengaktifkan Model (*Activating Models*)\par
+\par
+Sedikit potongan kode model yang kita buat tadi sudah memberikan banyak informasi kepada Django.\par
+Dengan informasi tersebut, Django dapat:\par
+\par
+* Membuat *schema* basis data (perintah **CREATE TABLE**) untuk aplikasi ini.\par
+* Membuat API Python untuk mengakses objek **Question** dan **Choice**.\par
+\par
+Namun sebelum itu, kita perlu memberi tahu proyek kita bahwa aplikasi **polls** sudah diinstal.\par
+\par
+### \f1\u-10179?\u-9055?\f5  \f4 Filsafat Django\par
+\par
+Aplikasi Django bersifat **\f5\ldblquote\f4 pluggable\f5\rdblquote\f4 ** \f5\emdash  \f4 artinya, kamu dapat menggunakan satu aplikasi di banyak proyek, dan juga membagikannya ke orang lain.\par
+Aplikasi tidak harus terikat pada satu instalasi Django tertentu.\par
+\par
+Untuk menyertakan aplikasi tersebut ke dalam proyek kita, kita perlu menambahkan **referensi ke kelas konfigurasinya** di pengaturan **INSTALLED_APPS**.\par
+\par
+Kelas konfigurasi untuk aplikasi *polls* adalah **PollsConfig**, yang berada di file **polls/apps.py**,\par
+jadi *dotted path*-nya adalah:\par
+'polls.apps.PollsConfig'\par
+\par
+Edit file **mysite/settings.py**, lalu tambahkan *dotted path* tersebut ke dalam pengaturan **INSTALLED_APPS**.\par
+Hasilnya akan terlihat seperti ini:\par
+### \f1\u-10179?\u-9020?\f5  \f4 Listing 12: mysite/settings.py\par
+\par
+```python\par
+INSTALLED_APPS = [\par
+    "polls.apps.PollsConfig",\par
+    "django.contrib.admin",\par
+    "django.contrib.auth",\par
+    "django.contrib.contenttypes",\par
+    "django.contrib.sessions",\par
+    "django.contrib.messages",\par
+    "django.contrib.staticfiles",\par
+]\par
+Sekarang Django sudah tahu bahwa aplikasi **polls** harus disertakan dalam proyek.\par
+\par
+Selanjutnya, jalankan perintah berikut di terminal:\par
+$ python manage.py makemigrations polls\par
+Kamu akan melihat keluaran yang mirip dengan ini:\par
+Migrations for 'polls':\par
+  polls/migrations/0001_initial.py\par
+File migrasi ini adalah hasil dari perintah di atas \f5\emdash  \f4 Django membuatnya untuk mencatat perubahan pada model kamu agar nantinya bisa diterapkan ke basis data.\par
+**Django Documentation, Versi 5.2.8.dev20251031124732**\par
+\par
+---\par
+\par
+### (lanjutan dari halaman sebelumnya)\par
+\par
+```\par
++ Create model Question\par
++ Create model Choice\par
+```\par
+\par
+Dengan menjalankan perintah `makemigrations`, kamu memberi tahu Django bahwa kamu telah membuat perubahan pada model-modelmu (dalam kasus ini, membuat model baru), dan ingin agar perubahan itu disimpan sebagai **migrasi**.\par
+\par
+**Migrasi** adalah cara Django menyimpan perubahan terhadap model (dan juga skema basis data). Migrasi disimpan sebagai **berkas di dalam disk**.\par
+Kamu bisa membaca file migrasi untuk model baru kamu di:\par
+`polls/migrations/0001_initial.py`.\par
+\par
+Kamu tidak harus membaca file ini setiap kali Django membuatnya, tetapi file tersebut dibuat agar **bisa diedit secara manual**, jika kamu ingin menyesuaikan cara Django mengubah database.\par
+\par
+Ada perintah yang bisa menjalankan migrasi untukmu dan mengelola skema basis data secara otomatis, yaitu **`migrate`**.\par
+Namun sebelum itu, mari lihat SQL apa yang sebenarnya akan dijalankan migrasi ini dengan perintah berikut:\par
+\par
+```\par
+$ python manage.py sqlmigrate polls 0001\par
+```\par
+\par
+Kamu akan melihat hasil seperti ini (sudah diformat agar lebih mudah dibaca):\par
+\par
+```sql\par
+BEGIN;\par
+--\par
+-- Create model Question\par
+--\par
+CREATE TABLE "polls_question" (\par
+    "id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,\par
+    "question_text" varchar(200) NOT NULL,\par
+    "pub_date" timestamp with time zone NOT NULL\par
+);\par
+--\par
+-- Create model Choice\par
+--\par
+CREATE TABLE "polls_choice" (\par
+    "id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,\par
+    "choice_text" varchar(200) NOT NULL,\par
+    "votes" integer NOT NULL,\par
+    "question_id" bigint NOT NULL\par
+);\par
+ALTER TABLE "polls_choice"\par
+ADD CONSTRAINT "polls_choice_question_id_c5b4b260_fk_polls_question_id"\par
+FOREIGN KEY ("question_id")\par
+REFERENCES "polls_question" ("id")\par
+DEFERRABLE INITIALLY DEFERRED;\par
+\par
+CREATE INDEX "polls_choice_question_id_c5b4b260" ON "polls_choice" ("question_id");\par
+COMMIT;\par
+```\par
+\par
+---\par
+\par
+### \f6\u-10178?\u-8727?\f5  \f4 Hal-hal yang perlu diperhatikan:\par
+\par
+* Hasil keluaran bisa berbeda tergantung jenis basis data yang kamu gunakan (contoh di atas untuk **PostgreSQL**).\par
+* Nama tabel dibuat otomatis dari nama aplikasi (**polls**) dan nama model dalam huruf kecil (**question**, **choice**) \f5\emdash  \f4 perilaku ini bisa diubah.\par
+* Django otomatis menambahkan **primary key (ID)** \f5\emdash  \f4 kamu juga bisa menimpanya.\par
+* Django menambahkan akhiran **`_id`** pada kolom *foreign key* \f5\emdash  \f4 ini juga bisa diubah.\par
+* Relasi *foreign key* dinyatakan dengan **FOREIGN KEY constraint**.\par
+  Jangan khawatir dengan bagian `DEFERRABLE`; itu hanya memberi tahu PostgreSQL untuk menunda pengecekan relasi hingga akhir transaksi.\par
+* Django otomatis menyesuaikan SQL berdasarkan jenis basis data \f5\emdash  \f4 misalnya `auto_increment` di MySQL, `IDENTITY` di PostgreSQL, atau `autoincrement` di SQLite.\par
+* Perintah **`sqlmigrate`** tidak benar-benar menjalankan migrasi di database, tetapi hanya menampilkan SQL-nya di layar \f5\emdash  \f4 berguna untuk memeriksa apa yang akan dilakukan Django.\par
+\par
+Kamu juga dapat menjalankan:\par
+\par
+```\par
+$ python manage.py check\par
+```\par
+\par
+untuk memeriksa adanya kesalahan di proyekmu **tanpa menjalankan migrasi atau menyentuh database**.\par
+\par
+---\par
+\par
+Sekarang jalankan migrasi untuk benar-benar membuat tabel di database:\par
+\par
+```\par
+$ python manage.py migrate\par
+```\par
+\par
+Kamu akan melihat hasil seperti berikut:\par
+\par
+```\par
+Operations to perform:\par
+  Apply all migrations: admin, auth, contenttypes, polls, sessions\par
+Running migrations:\par
+  Rendering model states... DONE\par
+  Applying polls.0001_initial... OK\par
+```\par
+\par
+Perintah **`migrate`** akan menjalankan semua migrasi yang belum diterapkan ke database (Django melacaknya di tabel khusus bernama `django_migrations`).\par
+Tujuannya adalah **menyinkronkan perubahan di file model dengan skema database.**\par
+\par
+Migrasi adalah fitur yang **kuat**, memungkinkan kamu mengubah model seiring perkembangan proyek tanpa harus menghapus dan membuat ulang database \f5\emdash  \f4 bahkan bisa memperbarui database *secara langsung* tanpa kehilangan data.\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-8959?\f5  \f4 Tiga langkah utama saat mengubah model:\par
+\par
+1. Ubah model di file `models.py`.\par
+2. Jalankan `python manage.py makemigrations` untuk membuat file migrasi.\par
+3. Jalankan `python manage.py migrate` untuk menerapkan perubahan ke database.\par
+\par
+Alasan perintah *make* dan *apply* migrasi dipisahkan adalah karena **file migrasi disimpan di sistem kontrol versi** (seperti Git) agar bisa digunakan oleh pengembang lain dan di server produksi.\par
+\par
+Untuk informasi lengkap tentang utilitas `manage.py`, lihat dokumentasi **django-admin**.\par
+\par
+---\par
+\par
+## 2.4.4 Bermain dengan API (*Playing with the API*)\par
+\par
+Sekarang kita akan masuk ke *Python shell interaktif* dan mencoba API gratis yang disediakan Django.\par
+\par
+Gunakan perintah berikut:\par
+\par
+```\par
+$ python manage.py shell\par
+```\par
+\par
+Kita tidak hanya mengetik `python`, karena `manage.py` secara otomatis menetapkan variabel lingkungan `DJANGO_SETTINGS_MODULE` agar Django tahu lokasi file `mysite/settings.py`.\par
+Perintah ini juga secara otomatis mengimpor model dari **INSTALLED_APPS**.\par
+\par
+---\par
+\par
+### Contoh eksplorasi API:\par
+\par
+```python\par
+# Tidak ada pertanyaan di sistem.\par
+>>> Question.objects.all()\par
+<QuerySet []>\par
+\par
+# Buat pertanyaan baru.\par
+>>> from django.utils import timezone\par
+>>> q = Question(question_text="What's new?", pub_date=timezone.now())\par
+\par
+# Simpan ke database.\par
+>>> q.save()\par
+\par
+# Sekarang memiliki ID.\par
+>>> q.id\par
+1\par
+```\par
+\par
+Akses nilai-nilai field:\par
+\par
+```python\par
+>>> q.question_text\par
+"What's new?"\par
+>>> q.pub_date\par
+datetime.datetime(2012, 2, 26, 13, 0, 0, 775217, tzinfo=datetime.timezone.utc)\par
+```\par
+\par
+Ubah dan simpan kembali:\par
+\par
+```python\par
+>>> q.question_text = "What's up?"\par
+>>> q.save()\par
+```\par
+\par
+Tampilkan semua pertanyaan:\par
+\par
+```python\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: Question object (1)>]>\par
+```\par
+\par
+Hasil `<Question: Question object (1)>` tidak terlalu informatif.\par
+Mari tambahkan metode `__str__()` ke model:\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-9020?\f5  \f4 Listing 13: polls/models.py\par
+\par
+```python\par
+from django.db import models\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.question_text\par
+\par
+class Choice(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.choice_text\par
+```\par
+\par
+Menambahkan `__str__()` penting untuk tampilan interaktif dan juga untuk antarmuka admin otomatis Django.\par
+\par
+Tambahkan juga metode khusus berikut:\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-9020?\f5  \f4 Listing 14: polls/models.py\par
+\par
+```python\par
+import datetime\par
+from django.db import models\par
+from django.utils import timezone\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def was_published_recently(self):\par
+        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)\par
+```\par
+\par
+Pastikan untuk menambahkan:\par
+\par
+```python\par
+import datetime\par
+from django.utils import timezone\par
+```\par
+\par
+Agar Django dan Python bisa mengakses waktu dengan zona waktu yang benar.\par
+\par
+---\par
+\par
+### Uji di shell baru:\par
+\par
+```python\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: What's up?>]>\par
+>>> Question.objects.filter(id=1)\par
+<QuerySet [<Question: What's up?>]>\par
+>>> Question.objects.filter(question_text__startswith="What")\par
+<QuerySet [<Question: What's up?>]>\par
+>>> current_year = timezone.now().year\par
+>>> Question.objects.get(pub_date__year=current_year)\par
+<Question: What's up?>\par
+```\par
+\par
+Mencoba akses ID yang tidak ada:\par
+\par
+```python\par
+>>> Question.objects.get(id=2)\par
+DoesNotExist: Question matching query does not exist.\par
+```\par
+\par
+Akses cepat dengan primary key:\par
+\par
+```python\par
+>>> Question.objects.get(pk=1)\par
+<Question: What's up?>\par
+```\par
+\par
+Buat beberapa **Choice** untuk pertanyaan tersebut:\par
+\par
+```python\par
+>>> q.choice_set.create(choice_text="Not much", votes=0)\par
+>>> q.choice_set.create(choice_text="The sky", votes=0)\par
+>>> c = q.choice_set.create(choice_text="Just hacking again", votes=0)\par
+```\par
+\par
+Cek hubungan:\par
+\par
+```python\par
+>>> q.choice_set.all()\par
+<QuerySet [<Choice: Not much>, <Choice: The sky>, <Choice: Just hacking again>]>\par
+>>> q.choice_set.count()\par
+3\par
+```\par
+\par
+Cari dengan relasi:\par
+\par
+```python\par
+>>> Choice.objects.filter(question__pub_date__year=current_year)\par
+<QuerySet [<Choice: Not much>, <Choice: The sky>, <Choice: Just hacking again>]>\par
+```\par
+\par
+Hapus salah satu pilihan:\par
+\par
+```python\par
+>>> q.choice_set.filter(choice_text__startswith="Just hacking").delete()\par
+```\par
+\par
+Untuk informasi lebih lanjut:\par
+\par
+* **Accessing related objects** \f5\u8594? \f4 cara bekerja dengan relasi antar model.\par
+* **Field lookups** \f5\u8594? \f4 cara menggunakan tanda ganda garis bawah (`__`) dalam pencarian.\par
+* **Database API reference** \f5\u8594? \f4 panduan lengkap API database Django.\par
+\par
+---\par
+\par
+## 2.4.5 Mengenal Django Admin (*Introducing the Django Admin*)\par
+\par
+### \f1\u-10179?\u-9055?\f5  \f4 Filsafat Django\par
+\par
+Membuat situs admin untuk menambah, mengubah, atau menghapus konten bisa sangat membosankan dan tidak membutuhkan kreativitas tinggi.\par
+Oleh karena itu, Django **mengotomatisasi seluruh proses pembuatan antarmuka admin** untuk model.\par
+\par
+Django diciptakan di lingkungan redaksi berita, di mana terdapat pemisahan jelas antara **pengelola konten** dan **pengunjung publik**.\par
+Admin situs digunakan untuk menambah berita, acara, skor pertandingan, dan sebagainya \f5\emdash  \f4 sedangkan pengunjung hanya melihat hasilnya.\par
+\par
+Admin **bukan untuk pengunjung situs**, melainkan untuk pengelola.\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-8943?\f5  \f4 Membuat Pengguna Admin\par
+\par
+Jalankan perintah berikut:\par
+\par
+```\par
+$ python manage.py createsuperuser\par
+```\par
+\par
+Masukkan data:\par
+\par
+```\par
+Username: admin\par
+Email address: admin@example.com\par
+Password: **********\par
+Password (again): *********\par
+Superuser created successfully.\par
+```\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-8576?\f5  \f4 Menjalankan Server dan Masuk ke Admin\par
+\par
+Admin Django sudah aktif secara bawaan. Jalankan server:\par
+\par
+```\par
+$ python manage.py runserver\par
+```\par
+\par
+Buka peramban dan kunjungi:\par
+\par
+```\par
+{{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/admin/ }}{\fldrslt{http://127.0.0.1:8000/admin/\ul0\cf0}}}}\f4\fs22\par
+```\par
+\par
+Layar login admin akan muncul (bahasanya mengikuti pengaturan `LANGUAGE_CODE`).\par
+\par
+Masuk dengan akun *superuser* yang baru dibuat. Kamu akan melihat halaman utama admin dengan daftar konten seperti **Groups** dan **Users**, yang disediakan oleh `django.contrib.auth`.\par
+\par
+---\par
+\par
+### \f6\u-10179?\u-8717?\u-497?\f5  \f4 Menampilkan Aplikasi Poll di Admin\par
+\par
+Aplikasi **polls** belum muncul di admin.\par
+Kita perlu memberi tahu admin bahwa model `Question` bisa dikelola di sana.\par
+\par
+Edit file **polls/admin.py** menjadi seperti ini:\par
+\par
+---\par
+\par
+### \f1\u-10179?\u-9020?\f5  \f4 Listing 15: polls/admin.py\par
+\par
+```python\par
+from django.contrib import admin\par
+from .models import Question\par
+\par
+admin.site.register(Question)\par
+```\par
+\par
+---\par
+\par
+Sekarang Django tahu bahwa model **Question** harus ditampilkan di admin.\par
+Klik \f5\ldblquote\f4 Questions\f5\rdblquote\f4 , dan kamu akan melihat daftar pertanyaan yang ada di database (seperti \f5\ldblquote\f4 What\f5\rquote\f4 s up?\f5\rdblquote\f4 ).\par
+\par
+Formulirnya dibuat otomatis berdasarkan model, dengan:\par
+\par
+* *Field* `DateTimeField` dan `CharField` tampil sesuai widget HTML-nya.\par
+* Tanggal dan waktu memiliki pintasan JavaScript seperti \f5\ldblquote\f4 Today\f5\rdblquote  \f4 dan \f5\ldblquote\f4 Now\f5\rdblquote\f4 .\par
+\par
+Tombol di bawah halaman:\par
+\par
+* **Save** \f5\endash  \f4 simpan dan kembali ke daftar.\par
+* **Save and continue editing** \f5\endash  \f4 simpan dan tetap di halaman edit.\par
+* **Save and add another** \f5\endash  \f4 simpan dan buat entri baru.\par
+* **Delete** \f5\endash  \f4 buka konfirmasi penghapusan.\par
+\par
+Jika waktu \f5\ldblquote\f4 Date published\f5\rdblquote  \f4 tidak sesuai, kemungkinan **TIME_ZONE** belum diatur dengan benar \f5\emdash  \f4 ubah, simpan, dan muat ulang.\par
+\par
+Cobalah klik \f5\ldblquote\f4 Today\f5\rdblquote  \f4 dan \f5\ldblquote\f4 Now\f5\rdblquote\f4 , lalu \f5\ldblquote\f4 Save and continue editing\f5\rdblquote\f4 .\par
+Kemudian klik \f5\ldblquote\f4 History\f5\rdblquote  \f4 di kanan atas untuk melihat semua perubahan yang telah dilakukan terhadap objek tersebut \f5\emdash  \f4 lengkap dengan waktu dan nama pengguna yang mengubahnya.\b\f0\lang9\par
+
+\pard\sa200\sl276\slmult1\b0\par
+}
+ 
